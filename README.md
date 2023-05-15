@@ -1,2 +1,13 @@
-# empower_test
-Some code to test a vulnerability in Empower (CBBE)
+# empowering_vulnerabilities
+
+This code exploits a vulnerability in Empower's messaging system to send messages as anybody to anybody. These messages are also vulnerable to DOM-based XSS, with the code being invisible to anyone viewing the message. In theory, you could send a message from a teachers account to a student, with a message containing invisible XSS that steals login credentials.
+
+How does this vulnerability work? Well, it all comes down to how Empower handles messages. Unlike other API requests in Empower, the messaging system uses a sequential ID system instead of cookies. I figured this out because my "Social ID" is 290****, and my brothers "Social ID" is 2890*** To send a message, you need 3 things. The senders ID, and the receivers ID + "People ID". This creates a problem. How do I get the "People ID" of the receiver? Well, there is a pretty simple way. Something I haven't mentioned yet are "Social Message Feed" requests. These requests give you all messages both sent and recieved by a user, and the method only needs a "Social ID". In each message, you can see someone's "Social ID", and importantly, their "People ID". So, if someone has ever sent a message, that message will contain their People ID. So theoretically, if you have their social ID, you can easily get their "People ID". Using this, we can go back to sending messages. Knowing the senders Social ID, and both the receivers Social ID and their People ID, we can easily fabricate a message from another student or even a teacher, to send to a student.
+
+How can could someone gain from this? This is where the real problem comes from. These messages aren't sanitized properly, so they can be a victim to DOM-based XSS. In my testing, the XSS code is completely invisible to anyone viewing a message, which means that you can put a message like "Good job on the 4!", and in the end put some code that steals their cookies. The viewer of the message would just think that their teacher was congratulating them, while the teacher probably won't be able to differentiate that message from the 100 others they have already sent to students. For purely testing purposes, I wrote some simple Javascript that uses DOM-based XSS to grab cookies, and a discord webhook to exfiltrate data.
+
+![Code Image](https://nextcloud.swifts.wiki/s/8CFa8G24CzPEmdS/download/code.png)
+
+How did I figure this out? I'll keep it short, but I was messing around with Empower when I opened the message box with the network dev-tool open. Looking at the request, I realized that it did not use cookies, but instead the payload contained a special ID system. From there, I figured out the rest by messing around with different requests and different buttons.
+
+Thanks for reading! If you have any questions, email me at nicholasvetprofessional@gmail.com
